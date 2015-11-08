@@ -1,0 +1,309 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>奔流城模式添加</title>
+<link rel="stylesheet" type="text/css" href="/public/stylesheets/index.css" />
+<script type="text/javascript" src="/public/javascripts/newjs.js"></script>
+<link rel="stylesheet" type="text/css" href="/public/stylesheets/jquery-ui.css"/>
+<script type="text/javascript" src="/public/javascripts/jquery-1.4.2.min.js"></script>
+<script type="text/javascript" src="/public/javascripts/jquery-ui.js"></script>
+<script type="text/javascript" src="/public/javascripts/jquery-ui-slide.min.js"></script>
+<script type="text/javascript" src="/public/javascripts/jquery-ui-timepicker-addon.js"></script>
+<script type="text/javascript">
+function addKeywordsModal(obj){
+	$(obj).next().after('<div>'+
+					'<div class="left_space">匹配关键词    ：</div> <select class="select_style" id="kwd_relation"><option value="AND">包含全部(AND)</option>'+
+						'<option value="OR">包含任意(OR)</option>'+
+						'<option value="NOT">不能包含(NOT)</option></select><input class="input_style_250" type="text" />'+
+					'<div class="delete" onclick="removeKeywordsModal(this)">-</div>'+
+				'<div class="clear"></div></div>');
+}
+
+function removeKeywordsModal(obj){
+	$(obj).parent().remove();
+}
+
+function formartrule(obj){
+		var result="";
+		var typearray = new Array();
+		var keyarray = new Array();
+		var i=0;
+		var j=0;
+		var flag=0;
+		if("view1"==obj){
+			flag=0;
+		}else if("view2"==obj){
+			flag=1;
+		}
+		$("section > section:eq("+flag+") select option:selected").each(function(){
+			typearray[i]=$(this).attr("value");
+			i=i+1;
+		})
+		$("section > section:eq("+flag+") input.input_style_250").each(function(){
+			keyarray[j]=$(this).attr("value");
+			j=j+1;
+		})
+		
+		 for(var e in typearray){
+		 	if(""!=keyarray[e]&&null!=keyarray[e]){
+		 		result=result+typearray[e]+":"+keyarray[e]+"_";
+		 	}
+		} 
+		result = result.substring(0,result.length-1);
+		return result;
+}
+
+function onadd1(obj){
+
+			 	var sim = $("#sim").val();
+				var host = $("#host").val();
+				var ip = $("#ip").val();
+				var network = $("#network").val();
+				var rulename = $("#rulename").val();
+				var inner = $('input[name="innerrel"]:checked').val();
+				var proto = getproto();
+				var keyword ="";
+				
+				sim=$.trim(sim) 
+				if(null==sim||""==sim){
+					alert("sim卡ID不能为空");
+					$("#sim").focus();
+					return;
+				}
+				if(sim.length!=25){
+					alert("sim卡ID长度为25,请重新输入");
+					$("#sim").focus()
+					return;
+				}
+				if(null!=ip&&""!=ip){
+					if(!reg_verify(ip)){
+						alert("ip不合法，请重新输入");
+						$("#ip").focus()
+						return;
+					}
+				}
+				var keytext=formartrule("view1");
+				if(null!=keytext&&""!=keytext){
+					ruleflag="lam";
+					if(null==rulename||""==rulename){
+						alert("规则名不能为空");
+						$("#rulename").focus();
+						return;
+					}
+					keyword="{'innerrel':\""+inner+"\",'keytext':\""+keytext+"\"}";
+				}else{
+					ruleflag="nolam";
+				}
+				console.info(keyword);
+				$.ajax({
+					type : "POST",
+					url : "/domainIm",
+					data : {'ip':ip,'sim':sim,'host':host,'keyword':keyword,'mark':'single',
+							'rulename':rulename,'ruleflag':ruleflag,'network':network,'proto':proto},
+					success : function(data) {
+						if(""!=data){
+						if("succ"==data)
+							alert("添加成功！")
+						}
+						else{
+							alert("添加失败！")
+						}
+					}
+				});
+				}
+	function reg_verify(addr){
+	       var reg = /^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])(\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])){3}$/;
+	
+	       if(addr.match(reg)) {
+	              
+	              return true;
+	       }
+	       else{
+	              return false;
+	       }
+	}	
+	
+	function onadd2(){
+	
+		var rulename=$("#rulename2").val();
+		var oldname=$("#oldrulename").val()
+		var checkrulename=$("#checkname").val();	
+		var keytext=formartrule("view2");
+		var inner = $('input[name="innerrel"]:checked').val();
+		if(null!=keytext&&""!=keytext){
+			ruleflag="lam";
+			if(null==rulename||""==rulename){
+				alert("规则名不能为空");
+				$("#rulename").focus();
+				return;
+			}
+			if(null!=checkrulename&&""!=checkrulename&&"noavailable"==checkrulename){
+					if(null==oldname||""==oldname||oldname==rulename){
+						alert("规则名已被使用，请更改");
+						$("#oldrulename").val(rulename)
+						$("#rulename").focus();
+						return;							
+					}
+				}
+		}else{
+			alert("规则内容不能为空");
+			//$("#addkeyword").focus();
+			return;
+		}
+		var keyword="{'innerrel':\""+inner+"\",'keytext':\""+keytext+"\"}";
+		$.ajax({
+			type : "POST",
+			url : "/domainIm",
+			data : {'keyword':keyword,'mark':'multi','rulename':rulename},
+			success : function(data) {
+				if(""!=data) {
+					if("succ"==data)
+						alert("添加成功！");
+				}
+				else{
+						alert("添加失败！");
+				}
+			}
+		});
+	}
+	function checkrulename(){
+				var rulename = $("#rulename2").val();
+				//var oldrulename = $("#oldrulename").val();
+				
+					if(""!=rulename&&null!=rulename){
+							$.ajax({
+							type : "POST",
+							url : "/chechrulename",
+							data : {'rulename':rulename},
+							success : function(data) {
+								if(""!=data) {
+									if("succ"==data){
+										$("#checkname").val("available");
+										//$("#oldrulename").val(rulename);
+									}else{
+									$("#checkname").val("noavailable");
+									alert("规则名已经被使用，请更换");
+									}
+								}
+							}
+						});
+					}
+			}
+			
+	function getproto(){
+			 var protonum=0;
+ 			 $('input[name="proto"]:checked').each(function(){    
+  			 	protonum = protonum + parseInt($(this).val());    
+  				});  
+  			return protonum;
+			}
+
+</script>
+</head>
+
+<body>
+	<!-- logo + nav -->
+    <div class="head">
+    	<div class="logo"></div>
+        <div class="nav">
+        	<ul>
+                <li class="current">添加模式</li>
+                <li><a href="/checkrule">模式查看</a></li>
+				<li><a href="/reverrun">日志检索</a></li>
+            </ul>
+        </div>
+    </div>
+    <!-- Tab -->
+    <section class="radiotabs">
+        <input type="radio" name="tab" id="tab1" class="tabs" checked="checked"/> 
+        <label for="tab1" style="margin-left:20px;">单人模式</label>
+        <input type="radio" name="tab" id="tab2" class="tabs"/> 
+        <label for="tab2">团队模式</label>
+        <section id="view1" class="tabcontent">
+        	<div class="left_space">编号ID：</div>
+            <input type="text" id="sim" name="sim" class="input_style" placeholder="编号长度为25"/>
+            <div class="left_space text">网卡ID：</div>
+            <input type="text" id="network" name="network" class="input_style" placeholder="格式：  D4:3D:7E:0D:79:AA" />
+            <div class="clear"></div>
+            <div class="left_space">ip地址：</div>
+            <input type="text" id="ip" name="ip"  class="input_style"/>
+            <div class="left_space">域名：</div>
+            <input type="text" id="host" name="host" class="input_style"/>
+            <div class="clear"></div>
+            <div class="left_space">请求方式：</div>
+            <div class="checkbox_style">
+	            <label><input name="proto" type="checkbox" value="1" />GET</label>
+	            <label><input name="proto" type="checkbox" value="2" />POST</label>
+            </div>
+            <div class="clear"></div>
+          <!--   <div class="direction">规则配置（多个规则关键字请以逗号“，”分开）</div>
+          <div class="left_space">组内关系：</div>     -->
+         	<div class="left_space">规则名：</div>
+            <input type="text" id="rulename" name="rulename" class="input_style"/>
+            <div class="clear"></div>
+            <div class="left_space">规则关系：</div>
+            <div class="checkbox_style">
+	            <label><input type="radio" name="innerrel" checked="checked" value="and"/>匹配所有（AND） </label>
+        		<label><input type="radio" name="innerrel"  value="or"/>匹配任意（OR）</label>
+            </div>
+            <div class="clear"></div>
+            <div id="345">
+	            <div>
+			            <div class="left_space">匹配关键字 ：</div>
+			            <select name=""  class="select_style">
+			              <option value="AND" selected="selected">包含全部(AND)</option>
+			              <option value="OR">包含任意(OR)</option>
+			              <option value="NOT">不能包含(NOT)</option>
+			            </select>
+			            <input name="" type="text" class="input_style_250" />
+			            <div class="add" onclick="addKeywordsModal(this)">+</div>
+			            <div class="clear"></div>
+	            </div>
+			 </div>
+		            <input name="" type="button" class="button_gray" style="margin-left:90px;" value="重置" />
+		            <input name="" type="button" class="button_green" value="添加" onclick="onadd1()"/>
+		            <div class="clear"></div>
+        </section>
+        
+        
+        <section id="view2" class="tabcontent">
+            <div class="left_space">规则名：</div>
+            <input type="text" id="rulename2" name="rulename2" class="input_style" onblur="checkrulename()" />
+            <input type="hidden" id="checkname" name="checkname" class="input_style"/>
+			<input type="hidden" id="oldrulename" name="oldrulename" class="input_style"/>
+            <div class="clear"></div>
+            <div class="direction">规则配置（多个规则关键字请以逗号“，”分开）</div>
+            <div class="clear"></div>
+            
+            
+            
+             <div class="left_space">规则关系：</div>
+            <div class="checkbox_style">
+	            <label><input type="radio" name="innerrel" checked="checked" value="and"/>匹配所有（AND） </label>
+        		<label><input type="radio" name="innerrel"  value="or"/>匹配任意（OR）</label>
+            </div>
+            <div class="clear"></div>
+            <div id="345">
+	            <div>
+			            <div class="left_space">匹配关键字 ：</div>
+			            <select name=""  class="select_style">
+			              <option value="AND" selected="selected">包含全部(AND)</option>
+			              <option value="OR">包含任意(OR)</option>
+			              <option value="NOT">不能包含(NOT)</option>
+			            </select>
+			            <input name="" type="text" class="input_style_250" />
+			            <div class="add" onclick="addKeywordsModal(this)">+</div>
+			            <div class="clear"></div>
+	            </div>
+			 </div>
+            
+            
+            
+            <input name="" type="button" class="button_gray" style="margin-left:90px;" value="重置" />
+            <input name="" type="button" class="button_green" onclick="onadd2()"value="添加" />
+            <div class="clear"></div>
+        </section>
+    </section>
+</body>
+</html>

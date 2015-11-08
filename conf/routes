@@ -1,0 +1,23 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+# Home page
+#GET     /                                       Application.index
+GET     /reverrun                                Application.checkRever
+GET     /searchconfig							 Application.getReverRule
+POST    /doSearch                                Application.reverLogSearch
+GET     /addrule                                 Application.addRule
+GET     /checkrule                               Application.checkRule
+POST	/chechrulename							 Application.checkRulename
+POST	/domainIm								 Application.save_rule
+POST	/domainUpdate							 Application.update_rule
+POST    /domainSearch                        	 Application.domainSearch
+POST    /domainddl                       		 Application.domain_delete
+
+
+# Map static resources from the /app/public folder to the /public path
+GET     /public/                                staticDir:public
+
+# Catch all
+*       /{controller}/{action}                  {controller}.{action}

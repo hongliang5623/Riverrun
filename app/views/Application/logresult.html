@@ -1,0 +1,45 @@
+
+<!--  <div class="list_title">消息展示  共搜到${count}条数据</div>-->
+				 <input type="hidden" id="totalpage" name="totalpage" class="input_style" value="${totalpage}"/>
+				 <input type="hidden" id="currpage" name="currpage" class="input_style" value="${currpage}"/>
+                <table id="log_table" width="100%" border="0" cellspacing="0" cellpadding="0">
+                	<thead>
+                		<tr>
+                			<th style='width:15%;' class='td_bg'>SIM卡</th>
+                			<th style='width:9%;'  class='td_bg'>设备IP</th>
+                			<th style='width:5%;'  class='td_bg'>请求方式</th>
+                			<th style='width:10%;' class='td_bg'>目的IP</th>       			
+                			<th style='width:8%;' class='td_bg'>域名</th>             			
+                			<th style='width:12%;' class='td_bg'>访问时间</th>
+                			<th style='width:8%;' class='td_bg'>规则名</th>
+                			<th style='width:27%;' class='td_bg'>URL</th>
+                		</tr>
+                	</thead>
+                	<tbody>
+                	#{list items: list,as: 'task'}
+	                    <tr onMouseOver="this.style.background='#f9f9f9'" onMouseOut="this.style.background='#ffffff';">
+	                    	<td style='width:15%;' class="td_content">${task.sim}</td>
+	                    	<td style='width:9%;' class="td_content">${task.srcip}</td>
+	                    	<td style='width:5%;' class="td_content">${task.method}</td>
+	                    	<td style='width:10%;' class="td_content">${task.destip}</td>
+	                    	<td style='width:8%;' class="td_content">${task.host}</td>       	
+	                    	<td style='width:12%;' class="td_content">${task.time}</td>
+	                    	<td style='width:8%;' class="td_content">${task.keyword}</td>
+	                    	#{if task.ispost}
+	                    	<td style='width:27%;' class="td_content">
+	                    		<span class="td_content_link">
+	                    		<a href="javascript:void(0);" id="btnpop" onclick="popdiv('log','1','2','3','4','${task.hitdata}');">${task.url}</a>
+	                    		</span>
+	                    	</td>
+	                    	#{/if}
+	                    	#{else}
+	                    	<td style='width:27%;' class="td_content">
+	                    		<span class="td_content_link">${task.url}</span>
+	                    	</td>
+	                    	#{/else}
+	                    </tr>
+                    #{/list}
+                    </tbody>
+                </table>
+                <!-- <div>#{page mainContent:'wordsList',totalNum:totalNum,action:'/SensitiveWords/getSensitiveWordsList?paging=paging' /}</div> -->
+                

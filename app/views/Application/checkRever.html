@@ -1,0 +1,204 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>奔流城日志检索</title>
+<link rel="stylesheet" type="text/css" href="/public/stylesheets/index.css" />
+<link rel="stylesheet" type="text/css" href="/public/stylesheets/jquery-ui.css"/>
+<link href="/public/stylesheets/style.css" rel="stylesheet" type="text/css" />
+<link href="/public/stylesheets/page.css" rel="stylesheet" type="text/css" />
+<link href="/public/stylesheets/msgbox.css" rel="stylesheet" type="text/css"/>
+
+<!-- <script type="text/javascript" src="/public/javascripts/jquery-1.6.js"></script> -->
+<script type="text/javascript" src="/public/javascripts/jquery-1.4.2.min.js"></script>
+<script type="text/javascript" src="/public/javascripts/jquery-ui.js"></script>
+<script type="text/javascript" src="/public/javascripts/jquery-ui-slide.min.js"></script>
+<script type="text/javascript" src="/public/javascripts/jquery-ui-timepicker-addon.js"></script>
+<script type="text/javascript" src="/public/javascripts/newjs.js"></script>
+<script type="text/javascript" src="/public/My97DatePicker/WdatePicker.js"  language="javascript" ></script>
+
+<script src="/public/javascripts/jquery.myPagination5.0.js" type="text/javascript">  </script>
+<script src="/public/javascripts/msgbox.js" type="text/javascript" language="javascript" ></script>
+
+<script type="text/javascript">
+			function checkip(){
+				var ip = $("#ip").val();
+				if(""!=ip&&null!=ip){
+					if(!reg_verify(ip)){
+						alert("ip不合法，请重新输入");
+						$("#ip").focus()
+					}
+				}
+			}
+			function reg_verify(addr){
+      			 var reg = /^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])(\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])){3}$/;
+       			 if(addr.match(reg)) {
+             		 return true;
+       			}
+    		     else{
+              		return false;
+      			 }
+			}	
+			
+			function getRadio(evt){
+			
+			    var evt=evt || window.event;   
+			    var e =evt.srcElement || evt.target;
+			     if(e.value=="alllog")
+			     {
+			         if(document.getElementById('rulecontent')!=null)
+			         {
+			            document.getElementById('rulecontent').disabled="disabled";
+			         }
+			     }
+			     else if(e.value=="rulelog")
+			     {
+			         document.getElementById('rulecontent').disabled=null;
+			     }
+			}
+			
+			function onsearchpage(obj){
+				//alert("----------"+obj)
+				var sttime=$("#st").val();
+				var ettime=$("#et").val();
+				var scope= $('input[name="logscope"]:checked').val();
+				var sim = $("#sim").val();
+				var rulename = $("#rulecontent").val();
+				var ip = $("#ip").val();
+				if(""!=sim&&null!=sim){
+					sim=$.trim(sim) 
+					if(sim.length!=25){
+						alert("sim卡ID长度为25,请重新输入");
+						$("#sim").focus();
+						return;
+					}
+				}
+				
+				$.ajax({
+					type : "POST",
+					url : "/doSearch",
+					data : {'ip':ip,'simid':sim,'scope':scope,'rulename':rulename,'st':sttime,'et':ettime,'currpage':obj},
+					success : function(data) {
+						$("#resultContent").html(data);
+					}
+					});
+				}
+				
+			function onsearch11(obj){
+				//alert("----------"+obj)
+				var sttime=$("#st").val();
+				var ettime=$("#et").val();
+				var scope= $('input[name="logscope"]:checked').val();
+				var sim = $("#sim").val();
+				var rulename = $("#rulecontent").val();
+				var ip = $("#ip").val();
+				if(""!=sim&&null!=sim){
+					sim=$.trim(sim) 
+					if(sim.length!=25){
+						alert("sim卡ID长度为25,请重新输入");
+						$("#sim").focus();
+						return;
+					}
+				}
+				 $.ajax({
+					type : "POST",
+					url : "/doSearch",
+					data : {'ip':ip,'simid':sim,'scope':scope,'rulename':rulename,'st':sttime,'et':ettime,'currpage':obj},
+					success : function(data) {
+						$("#resultContent").html(data);
+						var totalpage=$("#totalpage").val();
+			        	var currpage=$("#currpage").val();
+						$("#demo1").myPagination({pageCount:totalpage,currPage:currpage,ajax:{
+						on:false,onClick:function(page){
+									//ZENG.msgbox.show(" 正在加载"+page+"页，请稍后...", 6, 1000);
+									if(page>1){
+										onsearchpage(page)
+									} 
+								}
+							}
+						})
+					}
+				}); 
+			}
+</script>
+
+ <style>
+	h2 {color: #AAD83E;}
+	p{ margin:5px; padding:5px; ;background-color:#313131; color:#FFF;}
+</style>
+<!-- <script>
+        function onsearch_begin() {
+        	var totalpage=$("#totalpage").val();
+        	var currpage=$("#currpage").val();
+        	alert("------------"+totalpage);
+        	alert("------------"+currpage);
+        	var clickpage=0
+			$("#demo1").myPagination({pageCount:totalpage,currPage:currpage,ajax:{
+			on:false,onClick:function(page){
+									/*ZENG.msgbox.show(" 正在加载"+page+"页，请稍后...", 6, 1000);*/
+									clickpage=0;
+									onsearch11(page);
+					}
+			}
+			});
+			if(0==clickpage){
+				onsearch11("1");
+			}
+			}
+		//	});
+</script> -->
+</head>
+<body>
+<!-- 单机规则查看 弹出框 -->
+<div id="bg"></div>
+<div id="pop" style="display: none;">
+	<div class="title_bg">命中内容<div class="close" id="btnclose" onclick="hidediv('single');"></div></div>
+    <textarea id = "hitcontent" name="" cols="" rows="" class="pop_textarea"></textarea>
+    <input name="" type="button" class="button_gray" style="margin-right:20px; float:right; margin-bottom:10px;" value="退出" onclick="hidediv('single');"/>
+    <div class="clear"></div>
+</div>
+<!-- logo + nav -->
+<div class="head">
+    <div class="logo"></div>
+    <div class="nav">
+        <ul>
+          <li><a href="/addrule">添加模式</a></li>
+          <li><a href="/checkrule">模式查看</a></li>
+          <li class="current">日志检索</li>
+        </ul>
+    </div>
+</div>
+<!-- Tab -->
+<section class="radiotabs">
+	<input type="radio" name="tab" id="tab1" class="tabs" checked="checked" />
+    <label for="tab1" style="margin-left:20px;">
+        日志检索
+    </label>
+    <section id="view1" class="tabcontent">
+    	<div class="left_space">检索范围：</div>
+        <div class="checkbox_style">
+        	<label><input type="radio" name="logscope"  value="alllog"  onclick="getRadio()"/>显示所有日志 </label>
+        	<label><input type="radio" name="logscope"  value="rulelog"  onclick="getRadio()"/>只显示规则命中</label>
+        </div>
+        <div class="clear"></div>
+        <div style='width:auto;padding-right:0px;' class="left_space"><span>开始时间：</span><input type="text" onClick="WdatePicker()" id="st" name="st" class="Wdate" value="${st}"/></div>
+      
+        <div style='width:auto;padding-right:0px;' class="left_space"><span>结束时间：</span><input type="text" id="et" name="et" value="${et}"  type="text" class="Wdate" onClick="WdatePicker()"/></div>
+      
+        <div class="clear"></div>
+        <div class="left_space">ip地址：</div>
+        <input type="text" id="ip" name="ip" class="input_style" value="${ip}" onblur="checkip()"/>
+        <div class="left_space">sim卡ID：</div>
+        <input type="text" id="sim" name="sim"  value="${sim}" placeholder="sim卡长度为25" class="input_style"/>
+        <div class="left_space">规则名：</div>
+        <input type="text" id="rulecontent" name="rulecontent"  value="${rulecontent}" class="input_style" />
+        <input name="" type="button" onclick="onsearch11('1')" class="button_green_top" value="搜索" />
+        <div class="clear"></div>
+        <!-- 消息展示 -->
+		<div id="resultContent"></div>
+		<div id="demo1"></div>
+    </section>
+</section>
+</body>
+</html>
+

@@ -1,0 +1,245 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>奔流城模式查看</title>
+<link rel="stylesheet" type="text/css" href="/public/stylesheets/index.css" />
+<link rel="stylesheet" type="text/css" href="/public/stylesheets/jquery-ui.css"/>
+<script type="text/javascript" src="/public/javascripts/jquery-1.4.2.min.js"></script>
+<script type="text/javascript" src="/public/javascripts/jquery-ui.js"></script>
+<script type="text/javascript" src="/public/javascripts/jquery-ui-slide.min.js"></script>
+<script type="text/javascript" src="/public/javascripts/jquery-ui-timepicker-addon.js"></script>
+<script type="text/javascript" src="/public/javascripts/newjs.js"></script>
+<script type="text/javascript">
+		function addKeywordsModal(obj){
+			$(obj).next().after('<div>'+
+							'<div class="left_space">匹配关键词    ：</div> <select class="select_style" id="kwd_relation"><option value="AND">包含全部(AND)</option>'+
+								'<option value="OR">包含任意(OR)</option>'+
+								'<option value="NOT">不能包含(NOT)</option></select><input class="input_style_250" type="text" />'+
+							'<div class="delete" onclick="removeKeywordsModal(this)">-</div>'+
+						'<div class="clear"></div></div>');
+		}
+		
+		function removeKeywordsModal(obj){
+			$(obj).parent().remove();
+		}
+		function on_search(){
+				var sim = $("#sim").val();
+				var rulename = $("#rulename").val();
+				var host = $("#host").val();
+				var ip = $("#ip").val();
+					$.ajax({
+					type : "POST",
+					url : "/domainSearch",
+					data : {'ip':ip,'sim':sim,'host':host,'rulename':rulename},
+					success : function(data) {
+						$("#content1").html(data);
+					}
+				});
+				}
+			function on_search2(){
+				var rulename = $("#rulename2").val();
+					$.ajax({
+					type : "POST",
+					url : "/domainSearch",
+					data : {'flag':'multi','rulename':rulename},
+					success : function(data) {
+						$("#content2").html(data);
+					}
+				});
+				}	
+    		
+    		function checkip(){
+				var ip = $("#ip").val();
+				if(""!=ip&&null!=ip){
+					if(!reg_verify(ip)){
+						alert("ip不合法，请重新输入");
+						$("#ip").focus()
+					}
+				}
+			}
+			
+			function reg_verify(addr){
+      			 var reg = /^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])(\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])){3}$/;
+       			 if(addr.match(reg)) {
+             		 return true;
+       			}
+    		     else{
+              		return false;
+      			 }
+			}	
+			
+			function onupdata(obj){
+				var keytext = "";
+				var ruleid="";
+				var rulename="";
+				var macid="";
+				var sim ="";
+				var inner="and"
+				var content="content1";
+				if("single"==obj){
+					ruleid = $("#tab_rule_id1").val();
+					rulename =  $("#tab_rulename").val();
+					keytext = formartrule("view1")
+					macid = $("tab_network").val();
+					sim = $("#tab_sim").val();
+					content="content1";
+				}else if("multi"==obj){
+					ruleid = $("#tab_rule_id2").val();
+					rulename =  $("#tab_rulename2").val();
+					keytext = formartrule("view2")
+					content="content2";
+				}
+				var keyword="{'innerrel':\""+inner+"\",'keytext':\""+keytext+"\"}";
+				$.ajax({
+					type : "POST",
+					url : "/domainUpdate",
+					data : {'ruleid':ruleid,'sim':sim,'mac':macid,'rulename':rulename,'keyword':keyword},
+					success : function(data) {
+						if(""!=data){
+							if("fal"==data){
+								alert("关键字修改失败！")
+							}else{
+								alert("关键字修改成功！")
+								hidediv(obj)
+								$("#"+content).html(data);
+							}
+						}	
+						else{
+							alert("关键字修改失败！")
+						}
+					}
+				});
+				}
+				
+	function formartrule(obj){
+		var result="";
+		var typearray = new Array();
+		var keyarray = new Array();
+		var i=0;
+		var j=0;
+		var divid="345";
+		if("view1"==obj){
+			divid="#345";
+		}else if("view2"==obj){
+			divid="#456";
+		}
+		$(divid + " select option:selected").each(function(){
+		/* $("#345 div select option:selected") */
+			typearray[i]=$(this).attr("value");
+			console.log(typearray[i]);
+			i=i+1;
+		})
+		$(divid + " .input_style_250").each(function(){
+			keyarray[j]=$(this).attr("value");
+			console.log(keyarray[j]);
+			j=j+1;
+		})
+		
+		 for(var e in typearray){
+			result=result+typearray[e]+":"+keyarray[e]+"_";
+		} 
+		result = result.substring(0,result.length-1);
+		console.info(result)
+		return result;
+		
+}
+		</script>
+</head>
+
+<body>
+<!-- 单机规则查看 弹出框 -->
+<div id="bg"></div>
+<div id="pop" style="display: none;">
+	<div class="title_bg">关键字配置<div class="close" id="btnclose" onclick="hidediv('single');"></div></div>
+    <div class="wrapper">
+        <div class="left_space">sim卡ID：</div>
+        <input type="text" id="tab_sim" name="tab_sim" class="input_style" />
+        <div class="left_space">mac地址：</div>
+        <input type="text" id="tab_network" name="tab_network"  class="input_style" />
+        <div class="clear"></div>
+        <div class="left_space">规则名：</div>
+        <input type="text" id="tab_rulename" name="tab_rulename" class="input_style" />
+        <div class="left_space" style="display: none">规则id：</div>
+        <input type="hidden" name="tab_rule_id1" id="tab_rule_id1" class="input_style" />
+        <div class="clear"></div>
+        <div class="direction">规则配置（多个规则关键字请以逗号“，”分开）</div>
+        <div class="clear"></div>
+        <div id="345">
+		</div>
+        <div class="clear"></div>
+        <div class="line_gray"></div>
+        <div class="line_whirt"></div>
+        <input name="" type="button" class="button_gray" style="float:right;" value="取消" onclick="hidediv('single');"/>
+        <input name="" type="button" class="button_green" style="float:right; margin-bottom:10px;" value="修改" onclick="onupdata('single')"/>
+    </div>
+</div>
+<!-- 规则查看 弹出框 -->
+<div id="pop2" style="display: none;">
+	<div class="title_bg">关键字配置<div class="close"  onclick="hidediv('multi');"></div></div>
+    <div class="wrapper">
+    	<div class="left_space">规则名：</div>
+        <input type="text" id="tab_rulename2" name="tab_rulename2" class="input_style" />
+        <div class="left_space" style="display: none">规则id：</div>
+        <input type="hidden" name="tab_rule_id2" id="tab_rule_id2" class="input_style" />
+        <div class="clear"></div>
+        <div class="clear"></div>
+        <div class="direction">规则配置（多个规则关键字请以逗号“，”分开）</div>
+        <div class="clear"></div>
+        <div id="456">
+		</div>
+        <div class="clear"></div> 
+        <div class="line_gray"></div>
+        <div class="line_whirt"></div>
+        <input name="" type="button" class="button_gray" style="float:right;" value="取消" onclick="hidediv('multi');"/>
+        <input name="" type="button" class="button_green" style="float:right; margin-bottom:10px;" value="修改" onclick="onupdata('multi')"/>
+    </div>
+</div>
+<!-- logo + nav -->
+<div class="head">
+    <div class="logo"></div>
+    <div class="nav">
+        <ul>
+          <li><a href="/addrule">添加模式</a></li>
+          <li class="current">模式查看</li>
+            <li><a href="/reverrun">日志检索</a></li>
+        </ul>
+    </div>
+</div>
+<!-- Tab -->
+<section class="radiotabs">
+    <input type="radio" name="tab" id="tab1" class="tabs" checked="checked"/>
+    <label for="tab1" style="margin-left:20px;">单机模式查看</label>
+    <input type="radio" name="tab" id="tab2" class="tabs"/>
+    <label for="tab2">团队模式查看</label>
+    <section id="view1" class="tabcontent">
+        <div class="left_space">sim卡ID：</div>
+        <input type="text" id="sim" class="input_style" name="sim" placeholder="sim卡长度为25"/>
+        <div class="left_space">ip地址：</div>
+        <input type="text" id="ip" class="input_style" name="ip" onblur="checkip()"/>
+        <div class="left_space">域名：</div>
+        <input type="text" id="host" name="host" class="input_style" />
+        <div class="left_space">规则名：</div>
+        <input type="text" id="rulename" name="rulename" class="input_style"/>
+        <input id="submitButton" onclick="on_search()" type="button" class="button_green_top" value="搜索" />
+        <div class="clear"></div>
+        <!-- 配置列表 -->
+       
+        <div id="resultContent">
+			<div class="list_title">单人模式列表</div>
+			<div id="content1"></div>
+		</div>
+    </section>
+    <section id="view2" class="tabcontent">
+        <div class="left_space">规则名：</div>
+        <input type="text" id="rulename2" class="input_style" name="rulename2"/>
+        <input id="submitButton2" onclick="on_search2()" class="button_green_top" value="搜索" />
+        <div class="clear"></div>
+           <div id="resultContent">
+			<div class="list_title">团队模式列表</div>
+			<div id="content2"></div>
+		</div>
+    </section>
+</section>
+</body>
+</html>

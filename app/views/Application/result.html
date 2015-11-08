@@ -1,0 +1,159 @@
+<div id="divMsg">
+          	<div class="tanchu">
+            <div class="tanchu_title">配置关键字</div>
+            <div class="tanchu_line"></div>
+            <textarea  id="keywordtemp" name="keywordtemp" cols=50 rows=5  style='width: 100%;margin:10px 0px;min-height: 130px;'></textarea>
+            
+            <input type="text" id="ru_index" name="ru_index" style="display:none;">
+            <input type="text" id="simtemp" name="simtemp" style="display:none;">
+            <input type="text" id="iptemp" name="iptemp" style="display:none;">
+            <input type="text" id="hosttemp" name="hosttemp" style="display:none;">
+            <input type="text" id="rulecontenttemp" name="rulecontenttemp" style="display:none;">
+            <input type="text" id="keyoldtemp" name="keyoldtemp" style="display:none;">
+            
+            <button type="button" class="tanchu_button" onclick="hiddenDiv('divMsg');">取消</button>
+            <button type="button" class="tanchu_button" onclick="onupdata();" style='margin-right: 10px;'>确定</button>
+          </div>
+</div>
+<style type="text/css">
+#divMsg
+{
+	display:none;
+	position:fixed;
+	border:solid 8px gray;
+	background-color:white;
+	top:40%;
+	left:50%;
+	width:418px;
+	margin-left:-228px;
+	margin-top:-92px;
+	padding:10px 10px 25px;
+	line-height:21px;
+	border-radius:5px;
+	-moz-border-radius:5px;
+}
+.tanchu{
+	width:398px;
+	margin:15px;
+	text-align:left;
+}
+.tanchu_title {
+	width: 99px;
+	height: 36px;
+	border-radius: 5px 5px 0 0;
+	background: #0591ce;
+	line-height: 36px;
+	color: #FFFFFF;
+	text-align: center;
+}
+[class^="icon"]{
+    display: inline-block;
+    background-image:url('../images/icon.png') ;
+    background-repeat: no-repeat;
+    cursor: pointer;
+}
+.tanchu_user{
+	width:69px;
+	height:30px;
+	text-align:right;
+	display:inline-block;
+	font-size:12px;
+	line-height:30px;
+}
+.tanchu_title{
+	width:99px;
+	height:36px;
+	border-radius:5px 5px 0 0;
+	background:#0591ce;
+	line-height:36px;
+	color:#FFFFFF;
+	text-align:center;
+}
+.tanchu_line{
+	width:398px;
+	height:1px;
+	background:#0591ce;
+}
+.tanchu_button{
+	width:64px;
+	height:30px;
+	border-radius:3px;
+	color:#FFFFFF;
+	border:none;
+	background:#0997d5;
+	float:right;
+	display:inline-block;
+	cursor:pointer;
+    font-family:'微软雅黑' ;
+}
+</style>
+
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+                	<thead>
+                		<tr>
+                			<th style='display:none'>规则id</th>
+                			#{if ss}  
+                			<th class="td_bg">SIM卡</th>
+                			<th class="td_bg">MAC</th>
+                			<th class="td_bg">IP</th>
+                			<th class="td_bg">域名</th>   
+                			#{/if} 
+                			<th class="td_bg">规则名</th>            			
+                			<th class="td_bg">规则内容</th>
+                			<th class="td_bg">操作</th>
+                		</tr>
+                	</thead>
+                	<tbody>
+                	#{list items: rulelist,as:'ru'}
+                    <tr  onMouseOver="this.style.background='#f9f9f9'" onMouseOut="this.style.background='#ffffff';">
+                    	<td style='display:none'>${ru.id}</td>
+                    	#{if ss}
+                    	<td class="td_content">${ru.simid}</td>
+                    	<td class="td_content">${ru.macid}</td>
+                    	<td class="td_content">${ru.ip}</td>
+                    	<td class="td_content">${ru.host}</td> 
+                    	#{/if}
+                    	<td class="td_content">${ru.rule_name}</td>  
+                    	<td id='${ru_index}_index'class="td_content">${ru.rule}</td>
+                    	#{if ss}
+                    	<td class="td_content">
+                    		<div class="button_gray_td" style='display: inline-block;'>
+                    			<a href="javascript:void(0);"onclick="javascript:dele('${ru.id}','${ru.simid}',this);">删除</a></div>
+                    		<div class="button_gray_td" style="margin-left:10px;display: inline-block">
+                    			<a href="javascript:void(0);"onclick="javascript:popdiv('single',
+                    			'${ru.id}','${ru.macid}','${ru.simid}','${ru.rule_name}','${ru.rulecomma}');">修改规则</a></div>
+                    	</td>  
+                    	#{/if}
+                    	#{else}
+                    	  <td class="td_content">
+                    		<div class="button_gray_td">
+                    			<a href="javascript:void(0);"onclick="javascript:dele('${ru.id}','${ru.simid}',this);">删除</a></div>
+                    		<div class="button_gray_td" style="margin-left:10px;">
+                    			<a href="javascript:void(0);"onclick="javascript:popdiv('multi',
+                    			'${ru.id}','${ru.macid}','${ru.simid}','${ru.rule_name}','${ru.rulecomma}');">修改规则</a></div>
+                    	</td>   
+                    	#{/else}
+                    #{/list}
+                    </tbody>
+                </table>
+<script>
+function dele(ruleid,simid,obj){
+    if (confirm("确认要删除？")) {
+       $.ajax({
+			type : "POST",
+			url : "/domainddl",
+			data : {'ruleid':ruleid,'simid':simid},
+			success : function(data) {
+				if("succ"==data){
+				$(obj).parent().parent().parent().remove();
+					//alert('删除成功！')
+				}
+				else{
+					alert("删除失败,请重试！")
+					} 
+				}
+			});
+            }
+	}
+</script>
+

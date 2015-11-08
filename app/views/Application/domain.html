@@ -1,0 +1,295 @@
+<html>
+	<head>
+		<meta charset="utf-8">
+		<link rel="stylesheet" type="text/css" href="/public/stylesheets/jquery-ui.css">
+		<script type="text/javascript" src="/public/javascripts/jquery-1.4.2.min.js"></script>
+		<script type="text/javascript" src="/public/javascripts/jquery-ui.js"></script>
+		<script type="text/javascript" src="/public/javascripts/jquery-ui-slide.min.js"></script>
+		<script type="text/javascript" src="/public/javascripts/jquery-ui-timepicker-addon.js"></script>
+		<style type="text/css">
+			body{
+				margin:0px;
+				padding:0px;
+				font-family:'microsoft yahei';
+				font-size:12px;
+                color: #333;
+                margin-top: 80;
+			}
+            #header{
+                height: 40px;
+                background: #3399cc;
+                position: fixed;
+                top: 0px;
+                left: 0px;
+                right: 0px;
+            }
+            #brand{
+                color: #fff;
+                font-size: 20px;
+                line-height: 40px;
+                margin-left: 200px;
+                float: left;
+            }
+			input:focus{
+				outline:0;
+			}
+            #searchForm input{
+                border: 1px solid #ccc;
+                border-radius:4px;
+                padding:4px 10px;
+                font-family: inherit;
+            }
+            #searchForm input[type='text']{
+                width: 140px;
+                margin-right: 20px;
+            }
+/*             #searchForm input[type="submit"]{
+                font-family: inherit;
+                background: #6dbbdd;
+                color: #fff;
+                border: 0;
+                cursor: pointer;
+                width: 50px;
+            } */
+            #submitButton{
+                font-family: inherit;
+                background: #6dbbdd;
+                color: #fff;
+                border: 0;
+                cursor: pointer;
+                width: 50px;
+            }
+			#content{
+				width:900px;
+				margin:50px auto;
+			}
+            #resultContent{
+                margin: 30px;
+            }
+            .title{
+                font-size: 20px;
+                margin: 0px 0px 20px;
+                padding-bottom: 3px;
+                padding-right: 2px;
+                color: #555;
+                border-bottom: 1px dotted #ccc;
+            }
+            table{
+            	width: 100%;
+            	border-collapse: collapse;
+            	border:1px solid #ccc;
+            	font-size: 13px;
+            }
+            table th{
+            	border-bottom:1px solid #ccc;
+            	height:32px;
+            	word-break: break-all;
+            }
+            table td{
+            	height:30px;
+            	border-bottom:1px solid #ccc;
+            	text-align: center;
+            	word-break: break-all;
+            }
+            .nav {
+				display: block;
+				float: left;
+				margin: 0 10px 0 0;
+			}
+		   .nav>li {
+				float: left;
+			}
+			.nav>li>a {
+				color: white;
+				
+			}
+		   .nav>li>a {
+				float: none;
+				padding: 10px 15px 10px;
+				text-decoration: none;
+			}
+			.nav>li>a {
+				display: block;
+			}
+			.nav>li>a:focus,.nav>li>a:hover {
+				color: #fff;
+				background-color: transparent;
+			}
+		</style>
+		
+		<script type="text/javascript">
+		function onadd(obj){
+				//console.log(sim)
+				var sim = $("#sim").val();
+				var host = $("#host").val();
+				var ip = $("#ip").val();
+				var rulename = $("#rulename").val();
+				
+				sim=$.trim(sim) 
+				if(null==sim||""==sim){
+					alert("sim卡ID不能为空");
+					$("#sim").focus();
+					return;
+				}
+				if(sim.length!=25){
+					alert("sim卡ID长度为25,请重新输入");
+					$("#sim").focus()
+					return;
+				}
+				if(null!=ip&&""!=ip){
+					if(!reg_verify(ip)){
+						alert("ip不合法，请重新输入");
+						$("#ip").focus()
+						return;
+					}
+				}
+				var keyword="{";
+				if("init"==obj){
+					var orkeyword = $("#keyword").val();
+					keyword="{'orkeyword':"+orkeyword+"}"
+				}else{
+					var addkeyword = $("#addkeyword").val();
+					var orkeyword = $("#orkeyword").val();
+					var nokeyword = $("#nokeyword").val();
+					var ruleflag="";
+					if((null!=orkeyword&&""!=orkeyword) ||(null!=addkeyword&&""!=addkeyword) ||(null!=nokeyword&&""!=nokeyword)) {
+						if(null==rulename||""==rulename){
+							alert("规则名不能为空");
+							$("#rulename").focus();
+							return;
+						}
+						ruleflag="lam";
+					}else{
+						ruleflag="nolam"
+					}
+					if(null!=orkeyword&&""!=orkeyword){
+						var orarray = new Array();  
+						if(orkeyword.indexOf(",") >= 0 ){
+							orarray=orkeyword.split(",");
+						}else if(orkeyword.indexOf("，") >= 0){
+							orarray=orkeyword.split("，");
+						}else{
+							orarray[0]=orkeyword
+						}
+						/* alert(orarray)
+						alert(orarray.length) */
+						if(orarray.length>1){
+							keyword=keyword+"orkeyword:\""+orkeyword+"\",";
+						}else{
+							alert("或关系关键字至少两个！");
+							$("#orkeyword").focus();
+							return;
+						}
+					}
+					if(null!=addkeyword&&""!=addkeyword){
+						keyword=keyword+"addkeyword:\""+addkeyword+"\",";
+					}
+					if(null!=nokeyword&&""!=nokeyword){
+						keyword=keyword+"nokeyword:\""+nokeyword+"\"";
+					}
+					
+					//keyword="{'orkeyword':"+orkeyword+",'addkeyword':"+addkeyword+",'nokeyword':"+nokeyword+"}"
+				}
+				keyword=keyword+"}"
+			//	alert(keyword)
+				/* */
+				$.ajax({
+					type : "POST",
+					url : "/domainIm",
+					data : {'ip':ip,'sim':sim,'host':host,'keyword':keyword,'mark':'single','rulename':rulename,'ruleflag':ruleflag},
+					success : function(data) {
+						if(""!=data){
+						if("succ"==data)
+							alert("添加成功！")
+						}
+						else{
+							alert("添加失败！")
+						}
+					}
+				});
+				}
+	function reg_verify(addr){
+	       var reg = /^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])(\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])){3}$/;
+	
+	       if(addr.match(reg)) {
+	              
+	              return true;
+	       }
+	       else{
+	              return false;
+	       }
+	}	
+	function highconf(){
+	
+		$("#initcfg").hide();
+		$("#highcfg").show();
+		$("#keyword").attr("value",'');
+	}
+	function canlhight(){
+		
+		$("#initcfg").show();
+		$("#highcfg").hide();
+		$("#addkeyword").attr("value",'');
+		$("#orkeyword").attr("value",'');
+		$("#nokeyword").attr("value",'');
+	}
+	
+		</script>
+	</head>
+	<body>
+        <div id="header">
+            <span id="brand">奔流城防务系统</span>
+           	  <ul class="nav">
+				<li > <a href="/reverrun" style="color:#381A1A;text-decoration:none;">单人模式配置</a></li>
+				<li > <a href="/addrule">团队模式配置</a></li>
+				<li > <a href="/domainManager">单机规则查看</a></li>
+				<li > <a href="/checkrule">规则查看</a></li>
+				<li > <a href="/searchlog">日志检索</a></li>
+			</ul>
+        </div>
+		<div id="content">
+			<div id="searchContent">
+			<!-- 	<form id="searchForm" onsubmit="return onadd()"> -->
+				<div id="searchForm">
+					<div id="topForm">
+						<label>sim卡ID：</label>
+						<input type="text" id="sim" name="sim" style="width:190px" placeholder="sim卡长度为25">
+						<label>网卡ID：</label>
+						<input type="text" id="network" name="network" style="width:300px" placeholder="网卡id长度为48">
+						<br>
+						<label>ip地址：</label>
+						<input type="text" id="ip" name="ip" style="width:190px;margin-left: 10px">
+						<label>域名：</label>
+						<input type="text" id="host" name="host" style="width:190px;margin-left: 13px">
+						<br>
+						<label>请求方式：</label>
+						<input name="Fruit" type="checkbox" value="1"/>GET
+						<input name="Fruit" type="checkbox" value="1"/>POST 
+						<input name="Fruit" type="checkbox" value="1"/>AJAX
+						
+						<div id="highcfg" style="margin-right: 100;margin-top: 10;">
+							<label>规则名：</label>
+							<input type="text" id="rulename" name="rulename">
+							<p >关键字高级配置（多个关键字请以‘，’分开）：</p>
+							<label >AND：</label>
+							<input type="text" id="addkeyword" name="addkeyword" style="width:250px;margin-left: 15px;" 
+							placeholder="‘与’关系，所有关键字必须命中">
+							<label style="margin-left: 40px">OR：</label>
+							<input type="text" id="orkeyword" name="orkeyword" style="width:250px;margin-left: 15px;"
+							placeholder="‘或’关系，所有关键字至少命中一个">
+							<br/>
+							<label >NOT：</label>
+							<input type="text" id="nokeyword" name="nokeyword" style="width:250px;margin-left: 15px;"
+							placeholder="‘非’，即全部不能命中">
+							
+							<!-- <a href="javascript:void(0)" onclick="canlhight()" style="margin-left: 45px;">取消高级自配置</a> -->
+							<input id="submitButton" onclick="onadd('hight')" type="button" style="margin-left: 50" value="添加" >
+						</div>
+					</div>
+				</div>
+				<!-- </form> -->
+			</div>
+			
+		</div>	
+	</body>
+</html>
